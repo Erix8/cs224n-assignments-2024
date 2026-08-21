@@ -1,25 +1,83 @@
-# Welcome to CS224N!
+# 🧭 Assignment 1: Exploring Word Vectors
 
-We'll be using Python throughout the course. If you've got a good Python setup already, great! But make sure that it is at least Python version 3.8. If not, the easiest thing to do is to make sure you have at least 3GB free on your computer and then to head over to (https://www.anaconda.com/download/) and install the Python 3 version of Anaconda. It will work on any operating system.
+Welcome to CS224N! 🎉 This is the very first stop on your NLP journey — and honestly, it's a pretty
+sweet one. Assignment 1 is all about **word vectors**: what they are, how they're built, and why a
+bunch of numbers can somehow capture meaning.
 
-After you have installed conda, close any open terminals you might have. Then open a new terminal and run the following command:
+> 🗣️ **"You shall know a word by the company it keeps."** — J.R. Firth (1957)
 
-## 1. Create an environment with dependencies specified in env.yml:
-    conda env create -f env.yml
+That quote is basically the whole assignment in a nutshell: words that hang out in similar contexts
+tend to mean similar things — and if we can encode that idea into numbers, we get word vectors! 🧮
 
-## 2. Activate the new environment:
-    conda activate cs224n
-    
-## 3. Inside the new environment, install IPython kernel so we can use this environment in jupyter notebook: 
- 
-    python -m ipykernel install --user --name cs224n
+## 📋 What's Inside
 
+The assignment is a single Jupyter notebook (`exploring_word_vectors.ipynb`) with two big parts:
 
-## 4. Homework 1 (only) is a Jupyter Notebook. With the above done you should be able to get underway by typing:
+### 📊 Part 1: Count-Based Word Vectors (10 pts)
 
-    jupyter notebook exploring_word_vectors.ipynb
-    
-## 5. To make sure we are using the right environment, go to the toolbar of exploring_word_vectors.ipynb, click on Kernel -> Change kernel, you should see and select cs224n in the drop-down menu.
+The classic "count stuff" approach:
 
-## To deactivate an active environment, use
-    conda deactivate
+1. **Distinct words** — collect all unique word types in the corpus. (Q1.1)
+2. **Co-occurrence matrix** — count how often words appear inside a fixed-size window of each other. (Q1.2)
+3. **Dimensionality reduction (SVD)** — squash that giant sparse matrix down to a few dense dimensions
+   with `TruncatedSVD`. (Q1.3)
+4. **Plot embeddings** — scatter-plot the 2-D vectors and eyeball the word clusters. (Q1.4)
+5. **Plot analysis** — answer written questions about what clusters together (and what weirdly doesn't). (Q1.5)
+
+The corpus is the **Large Movie Review Dataset (IMDb)** 🎬 — 25,000 highly polar movie reviews.
+
+### 🤖 Part 2: Prediction-Based Word Vectors (15 pts)
+
+The modern, "learned from data" approach — time to play with **GloVe**:
+
+- **GloVe plot analysis** — compare GloVe embeddings (trained on Wikipedia + Gigaword 📚, 400k words,
+  200-dim) against your count-based ones. (Q2.1)
+- **Cosine similarity** — the metric that measures how "close" two words are. (Q2.2, Q2.3)
+- **Word analogies** — solve `man : grandfather :: woman : ?` using pure vector arithmetic
+  (`w + g - m`). Mind-blowing the first time you see it. 🤯 (Q2.4–Q2.6)
+- **Bias in word vectors** — the important (and slightly uncomfortable 😬) part: embeddings absorb the
+  biases of the text they're trained on, and we analyze why that's dangerous. (Q2.7, Q2.8)
+
+## 🧠 What I Learned
+
+- How co-occurrence matrices + SVD produce surprisingly decent embeddings, but have real limits.
+- Why prediction-based vectors like GloVe generally win on semantic richness.
+- How to quantify word similarity with cosine distance.
+- That analogies are just vector arithmetic — and why they sometimes fail hilariously. 😅
+- That word vectors carry real-world **gender/race bias**, and handling that responsibly is on us.
+
+## 🛠️ Setup & How to Run
+
+You'll need **Python 3.8+** (Anaconda makes life easy — grab it
+[here](https://www.anaconda.com/download/), ~3GB free disk space required).
+
+```bash
+# 1. Create the environment from env.yml
+conda env create -f env.yml
+
+# 2. Activate it 🎉
+conda activate cs224n
+
+# 3. Register the kernel so Jupyter can find it
+python -m ipykernel install --user --name cs224n
+
+# 4. Launch the notebook 📓
+jupyter notebook exploring_word_vectors.ipynb
+
+# 5. In the notebook: Kernel -> Change kernel -> cs224n ✅
+```
+
+When you're done: `conda deactivate` 👋
+
+> 💡 The first GloVe download is pretty chunky — go grab a coffee ☕ while it runs.
+> If you hit a "reset by peer" error, just rerun the cell to resume the download.
+> Running low on memory? Close other apps (or restart) before launching the notebook. 🧠
+
+## 📁 Files in This Folder
+
+| File | What it is |
+|------|------------|
+| `exploring_word_vectors.ipynb` | The assignment notebook 📓 |
+| `env.yml` | Conda environment dependencies 🐍 |
+| `a1.pdf` | The assignment handout 📄 |
+| `imgs/` | Reference plots for sanity-checking your figures 🖼️ |
