@@ -15,9 +15,9 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 | # | Assignment | Summary | Progress |
 |---|------------|---------|----------|
 | 1 | [Exploring Word Vectors](./assignment1/README.md) | Count-based co-occurrence vectors vs. GloVe: cosine similarity, analogies & bias 🧭 | ✅ Done |
-| 2 | [Word2Vec and Dependency Parsing](./assignment2/README.md) | Build Word2Vec (skip-gram + negative sampling) from scratch, then a neural dependency parser 🧠 | 👨🏻‍💻 In progress |
+| 2 | [Word2Vec and Dependency Parsing](./assignment2/README.md) | Word2Vec math & Adam/dropout theory, implement a neural transition-based dependency parser 🧠 | 👨🏻‍💻 In progress |
 | 3 | [Neural Machine Translation with RNN](./assignment3/README.md) | Seq2seq translation with attention, BLEU scoring & gradient-clipping magic ✨ | 😴 Later... |
-| 4 | [Self-Attention & Transformers](./assignment4/README.md) | Implement self-attention & a mini transformer — the engine behind modern LLMs 🚀 | 😴 Later... |
+| 4 | [Self-Attention, Transformers and Pretraining](./assignment4/README.md) | Implement self-attention & a mini transformer — the engine behind modern LLMs 🚀 | 😴 Later... |
 
 ## 🚦 Status Legend
 
