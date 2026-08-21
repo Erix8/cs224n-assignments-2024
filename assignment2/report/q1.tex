@@ -38,8 +38,8 @@ The true empirical distribution $\by$ is a one-hot vector with a 1 for the true 
 The predicted distribution $\hat{\by}$ is the probability distribution $P(O|C=c)$ given by our model in equation (\ref{word2vec_condprob}). \newline
 
 \textbf{Note:} Throughout this homework, when computing derivatives, please use the method reviewed during the lecture (i.e. no Taylor Series Approximations).
-
 \clearpage
+
 \begin{parts}
 \part[2]
 Prove that the naive-softmax loss (Equation \ref{naive-softmax}) is the same as the cross-entropy loss between $\by$  and $\hat{\by}$, i.e. (note that $\by$ 
@@ -50,6 +50,8 @@ Prove that the naive-softmax loss (Equation \ref{naive-softmax}) is the same as 
 \end{equation}
 
 Your answer should be one line. You may describe your answer in words.
+
+\ifans{Since $\mathbf{y}$ is a one-hot vector with 1 at index $o$ and 0 elsewhere, all terms in the sum vanish except $w = o$, leaving $-1 \cdot \log(\hat{y}_o) = -\log(\hat{y}_o)$, which is exactly the naive-softmax loss.}
 
 
 % Question 1-B
@@ -69,6 +71,33 @@ Your answer should be one line. You may describe your answer in words.
 
 \end{enumerate}
 
+\ifans{
+\begin{align*}
+\bJ_{\text{naive-softmax}} &= -\log \hat{y}_o
+= -\bu_o^\top \bv_c + \log\left(\sum_{k\in\text{Vocab}} \exp(\bu_k^\top \bv_c)\right),\\[2mm]
+\frac{\partial \bJ_{\text{naive-softmax}}}{\partial \bv_c}
+&= -\bu_o + \frac{\sum_{k\in\text{Vocab}} \exp(\bu_k^\top \bv_c)\,\bu_k}{\sum_{k\in\text{Vocab}} \exp(\bu_k^\top \bv_c)}
+= -\bu_o + \sum_{k\in\text{Vocab}} \hat{y}_k \bu_k .
+\end{align*}
+Since $\by$ is one-hot with a $1$ at index $o$, we have $\bu_o = \bU\by$, and $\sum_k \hat{y}_k \bu_k = \bU\hat{\by}$. Therefore, in vectorized form (a column vector with the same shape as $\bv_c$):
+\[
+\boxed{\frac{\partial \bJ_{\text{naive-softmax}}(\bv_c, o, \bU)}{\partial \bv_c} = \bU(\hat{\by} - \by)}
+\]
+
+The gradient vanishes iff $\bU(\hat{\by}-\by)=\bzero$:
+\begin{itemize}
+\item If the columns of $\bU$ are linearly independent, then $\bU$ is injective, so this holds \emph{iff} $\hat{\by}=\by$, i.e.\ the model predicts probability $1$ for the true outside word $o$ and $0$ for every other word. 
+\item If the columns of $\bU$ are linearly dependent, the gradient can also vanish whenever $(\hat{\by}-\by)$ lies in the null space of $\bU$, even when the prediction is not perfect.
+\end{itemize}
+
+The gradient equals $\bU\hat{\by}-\bU\by$, so gradient descent performs
+$\bv_c \leftarrow \bv_c - \alpha \bU\hat{\by} + \alpha \bU\by$:
+\begin{itemize}
+    \item $+\alpha\bU\by = \alpha\bu_o$ \textbf{pulls} $\bv_c$ \emph{toward} the true outside vector $\bu_o$, increasing the score $\bu_o^\top\bv_c$ so the correct word $o$ becomes more probable.
+    \item $-\alpha\bU\hat{\by}$ \textbf{pushes} $\bv_c$ \emph{away from} every word vector $\bu_k$ weighted by its predicted probability $\hat{y}_k$, most strongly away from words that are currently over-predicted, lowering their scores.
+\end{itemize}
+Together these update $\bv_c$ so the model concentrates probability mass on the true word $o$ and reduces mass on incorrect words, driving $\hat{\by}$ toward the one-hot $\by$.
+}
 
 
 % Question 1-C
@@ -77,16 +106,42 @@ In many downstream applications using word embeddings, L2 normalized vectors (e.
 
 \textbf{Hint:} Consider the case where $\mathbf{u}_x = \alpha\mathbf{u}_y$ for some words $x \neq y$ and some scalar $\alpha$. When $\alpha$ is positive, what will be the value of normalized  $\mathbf{u}_x$ and normalized $\mathbf{u}_y$? How might $\mathbf{u}_x$ and $\mathbf{u}_y$ be related for such a normalization to affect or not affect the resulting classification?
 
+\ifans{
+L2 normalization discards each word vector's \emph{magnitude}, keeping only its \emph{direction}. For $\bu_x = \alpha\bu_y$ ($\alpha>0$), both normalize to the same unit vector, so the scale $\alpha$ is lost.
 
+Since the task decides the sign from the \emph{sum} of embeddings, a word's magnitude encodes how strongly it pushes the sum (hence the sign). So normalization \textbf{takes away} useful information when magnitudes differ and matter --- e.g.\ a strong word with $\alpha>1$ should weigh more than a weak same-direction word, but after normalization they weigh equally, possibly flipping the sum's sign.
+
+It would \textbf{not} hurt when magnitude carries no signal for the decision --- e.g.\ if all vectors already share the same norm $c$, then $\bu_i/\|\bu_i\|=\bu_i/c$ and the sum is scaled by $1/c>0$, leaving its sign unchanged. That is, normalization is harmless whenever the decision depends only on directions, not lengths.
+}
 % Question 1-D
 \part[5] 
 Compute the partial derivatives of $\bJ_{\text{naive-softmax}}(\bv_c, o, \bU)$ with respect to each of the `outside' word vectors, $\bu_w$'s. There will be two cases: when $w=o$, the true `outside' word vector, and $w \neq o$, for all other words. Please write your answer in terms of $\by$, $\hat{\by}$, and $\bv_c$. In this subpart, you may use specific elements within these terms as well (such as $\by_1$, $\by_2$, $\dots$). Note that $\bu_w$ is a vector while $\by_1, \by_2, \dots$ are scalars. Show your work to receive full credit.
 
-
-
+\ifans{
+Since $\bJ = -\log \hat{y}_o = -\bu_o^\top \bv_c + \log\left(\sum_{k\in\text{Vocab}}\exp(\bu_k^\top\bv_c)\right)$, differentiating with respect to a single outside vector $\bu_w$ gives
+\[
+\frac{\partial \bJ}{\partial \bu_w}
+= -\mathbf{1}\{w=o\}\,\bv_c + \frac{\exp(\bu_w^\top\bv_c)}{\sum_{k}\exp(\bu_k^\top\bv_c)}\,\bv_c
+= (\hat{y}_w - y_w)\bv_c ,
+\]
+since $y_w = \mathbf{1}\{w=o\}$. Concretely:
+\begin{itemize}
+    \item \textbf{Case $w=o$:} $y_o=1$, so $\dfrac{\partial \bJ}{\partial \bu_o} = (\hat{y}_o - 1)\bv_c$.
+    \item \textbf{Case $w\neq o$:} $y_w=0$, so $\dfrac{\partial \bJ}{\partial \bu_w} = \hat{y}_w\bv_c$.
+\end{itemize}
+In both cases the answer is the vector $(\hat{y}_w-y_w)\bv_c$, written in terms of $\hat{\by}$, $\by$, and $\bv_c$ (with $\hat{y}_w, y_w$ scalars), and each derivative has the same shape as $\bu_w$.
+}
 % Question 1-E
 \part[1]
 Write down the partial derivative of $\bJ_{\text{naive-softmax}}(\bv_c, o, \bU)$ with respect to $\bU$. Please break down your answer in terms of the column vectors $\frac{\partial \bJ(\bv_c, o, \bU)}{\partial \bu_1}$, $\frac{\partial \bJ(\bv_c, o, \bU)}{\partial \bu_2}$, $\cdots$, $\frac{\partial \bJ(\bv_c, o, \bU)}{\partial \bu_{|\text{Vocab}|}}$. No derivations are necessary, just an answer in the form of a matrix.
 
-
+\ifans{
+From Question 1-D, each column is $\frac{\partial \bJ}{\partial \bu_w} = (\hat{y}_w - y_w)\bv_c$. Hence
+\[
+\frac{\partial \bJ(\bv_c, o, \bU)}{\partial \bU}
+=
+\bv_c(\hat{\by}-\by)^\top,
+\]
+a matrix whose $w$-th column is $(\hat{y}_w-y_w)\bv_c$, for $w=1,\dots,|\text{Vocab}|$. Its shape is $d\times|\text{Vocab}|$, the same as $\bU$.
+}
 \end{parts}
