@@ -35,17 +35,46 @@ On each step, your parser will decide among the three transitions using a neural
     $[$ROOT, presented] & [my, findings, at, the, NLP, conference] & presented$\to$I &  \texttt{LEFT-ARC}  \\
     \end{tabular}\newline
     \end{adjustwidth}
+
+    \ifans{
+    \begin{adjustwidth}{}{}
+    \begin{tabular}{ l | l | l }
+    Stack & Transition & New dependency \\ \hline
+    [ROOT] & Initial Configuration & \\
+    $[$ROOT, I] & \texttt{SHIFT} & \\
+    $[$ROOT, I, presented] & \texttt{SHIFT} & \\
+    $[$ROOT, presented] & \texttt{LEFT-ARC} & presented$\to$I  \\
+    $[$ROOT, presented, my] & \texttt{SHIFT}  \\
+    $[$ROOT, presented, my, findings] & \texttt{SHIFT}  \\
+    $[$ROOT, presented, findings] & \texttt{LEFT-ARC} & findings$\to$my  \\
+    $[$ROOT, presented] & \texttt{RIGHT-ARC} & presented$\to$findings  \\
+    $[$ROOT, presented, at] & \texttt{SHIFT} & \\
+    $[$ROOT, presented, at, the] & \texttt{SHIFT} & \\
+    $[$ROOT, presented, at, the, NLP] & \texttt{SHIFT} & \\
+    $[$ROOT, presented, at, the, NLP, conference] & \texttt{SHIFT} & \\ 
+    $[$ROOT, presented, at, the, conference] & \texttt{LEFT-ARC} & conference$\to$NLP  \\ 
+    $[$ROOT, presented, at, conference] & \texttt{LEFT-ARC} & conference$\to$the  \\ 
+    $[$ROOT, presented, conference] & \texttt{LEFT-ARC} & conference$\to$at  \\
+    $[$ROOT, presented] & \texttt{RIGHT-ARC} & presented$\to$conference  \\
+    $[$ROOT] & \texttt{RIGHT-ARC} & ROOT$\to$presented  \\ 
+    \end{tabular}\newline
+    \end{adjustwidth} 
+    }
     
     \part[2] A sentence containing $n$ words will be parsed in how many steps (in terms of $n$)? Briefly explain in 1--2 sentences why.
-
-       
     
+    \ifans{
+    It takes $2n$ steps (the initial configuration is not a step). Each of the $n$ words is shifted onto the stack exactly once ($n$ \texttt{SHIFT} transitions), 
+    and each of the $n$ non-ROOT words receives exactly one incoming dependency edge, so exactly $n$ arc transitions (\texttt{LEFT-ARC}/\texttt{RIGHT-ARC}) are applied; 
+    parsing stops when the buffer is empty and only ROOT remains on the stack.
+    }
+
     \part[6] Implement the \texttt{\_\_init\_\_} and \texttt{parse\_step} functions in the \texttt{PartialParse} class in \texttt{parser\_transitions.py}. This implements the transition mechanics your parser will use. You can run basic (non-exhaustive) tests by running \texttt{python parser\_transitions.py part\_c}.
 
     \part[8] Our network will predict which transition should be applied next to a partial parse. We could use it to parse a single sentence by applying predicted transitions until the parse is complete. However, neural networks run much more efficiently when making predictions about \textit{batches} of data at a time (i.e., predicting the next transition for any different partial parses simultaneously). We can parse sentences in minibatches with the following algorithm. \newline
 
     \alglanguage{pseudocode}
-    \begin{algorithm*}[h]
+    \begin{algorithm}[H]
     \caption{Minibatch Dependency Parsing}
     \begin{algorithmic}
     	\State \textbf{Input:} \texttt{sentences}, a list of sentences to be parsed and \texttt{model}, our model that makes parse decisions
@@ -68,7 +97,7 @@ On each step, your parser will decide among the three transitions using a neural
     	\State
     	\State \textbf{Return:} The \texttt{dependencies} for each (now completed) parse in \texttt{partial\_parses}.
     \end{algorithmic}
-    \end{algorithm*}
+    \end{algorithm}
     
     Implement this algorithm in the \texttt{minibatch\_parse} function in \texttt{parser\_transitions.py}. You can run basic (non-exhaustive) tests by running \texttt{python parser\_transitions.py part\_d}.
 
@@ -95,15 +124,32 @@ On each step, your parser will decide among the three transitions using a neural
     \begin{enumerate}[label=\roman*.]
     
         \item \textcolor{black}{Compute the derivative of $\bh = \relu(\bx \bW + \bb_1)$ with respect to $\bx$. For simplicity, you only need to show the derivative $\frac{\partial h_i}{\partial x_j}$ for some index $i$ and $j$. You may ignore the case where the derivative is not defined at 0.}
+
+        \ifans{
+        Let $\bz = \bx\bW + \bb_1$, so $z_i = \sum_k x_k W_{ki} + b_{1,i}$ and $h_i = \relu(z_i)$. Then $\frac{\partial z_i}{\partial x_j} = W_{ji}$ and $\frac{\partial h_i}{\partial z_i} = \mathbf{1}\{z_i>0\}$, so by the chain rule
+        \[
+        \frac{\partial h_i}{\partial x_j} = W_{ji}\,\mathbf{1}\{z_i > 0\} = W_{ji}\,\mathbf{1}\{(\bx\bW + \bb_1)_i > 0\}.
+        \]
+        }
         \item \textcolor{black}{Recall in part 1b, we computed the partial derivative of $\bJ_{\text{naive-softmax}}(\bv_c, o, \bU)$. Likewise, please compute the partial derivative of $J(\theta)$ with respect to the $i$th entry of $\bl$, which is denoted as $\bl_i$. Specifically, compute $\frac{\partial CE(\by, \byt)}{\partial \bl_i}$, assuming that $\bl \in \R^3$, $\byt \in \R^3$, $\by \in \R^3$, and the true label is $c$. \\
         \textbf{Hints}: You may recall from part 1a, $\frac{\partial CE(\by, \byt)}{\partial \bl_i} = \sum_j \frac{\partial CE(\by, \byt)}{\partial \byt_j}\frac{\partial \byt_j}{\partial \bl_i}$, and $\frac{\partial CE(\by, \byt)}{\partial \byt_j}=0$ if $j \neq c$. 
         }
+
+        \ifans{
+        Since $\by$ is one-hot at the true label $c$, $CE(\by,\byt) = -\log\byt_c$. Using the hint, $\frac{\partial CE}{\partial\byt_j} = -\by_j/\byt_j$, which is $-1/\byt_c$ for $j=c$ and $0$ otherwise; and the softmax derivative is $\frac{\partial\byt_j}{\partial\bl_i} = \byt_i(\delta_{ij}-\byt_j)$, where $\delta_{ij}$ is the Kronecker delta ($\delta_{ij}=1$ if $i=j$, $0$ otherwise), which merges the two cases $i=j$ and $i\neq j$ into one expression. Hence
+        \[
+        \frac{\partial CE(\by,\byt)}{\partial\bl_i} = -\frac{1}{\byt_c}\frac{\partial\byt_c}{\partial\bl_i}
+        = \begin{cases} \byt_i, & i\neq c \\ \byt_c - 1, & i = c \end{cases}
+        = \byt_i - \by_i ,
+        \]
+        i.e.\ the gradient vector is $\byt - \by$.
+        }
         \item We will use UAS score as our evaluation metric. UAS refers to Unlabeled Attachment Score, which is computed as the ratio between number of correctly predicted dependencies and the number of total dependencies despite of the relations (our model doesn't predict this).\newline
     
-   In \texttt{parser\_model.py} you will find skeleton code to implement this simple neural network using PyTorch. Complete the \texttt{\_\_init\_\_}, \texttt{embedding\_lookup} and \texttt{forward} functions to implement the model. Then complete the \texttt{train\_for\_epoch} and \texttt{train} functions within the \texttt{run.py} file.
+        In \texttt{parser\_model.py} you will find skeleton code to implement this simple neural network using PyTorch. Complete the \texttt{\_\_init\_\_}, \texttt{embedding\_lookup} and \texttt{forward} functions to implement the model. Then complete the \texttt{train\_for\_epoch} and \texttt{train} functions within the \texttt{run.py} file.
    
-    Finally execute \texttt{python run.py} to train your model and compute predictions
-    on test data from Penn Treebank (annotated with Universal Dependencies). 
+        Finally execute \texttt{python run.py} to train your model and compute predictions
+        on test data from Penn Treebank (annotated with Universal Dependencies). 
     
     \textbf{Note:}
     \begin{itemize}
@@ -136,6 +182,11 @@ On each step, your parser will decide among the three transitions using a neural
             \item \textbf{Report the best UAS your model achieves on the dev set and the UAS it achieves on the test set in your written submission}.
     \end{itemize}
     \end{enumerate}
+    \ifans{
+    The trained parser achieved a \textbf{dev UAS of 88.65} (best over all epochs) and a \textbf{test UAS of 89.15}. (Model trained on an Apple M4 chip with 16\,GB memory.)
+    }
+
+
     
     
 \part[12] We'd like to look at example dependency parses and understand where parsers like ours might be wrong. For example, in this sentence:
@@ -204,8 +255,34 @@ In particular, you \textbf{do not} need to look at the labels on the the depende
 \medskip
 
 \input{dep_parses.tex}
+\ifans{
+\begin{enumerate}[label=\roman*.]
+    \item \textbf{Error type}: Verb Phrase Attachment Error. \\
+          \textbf{Incorrect dependency}: acquisition $\to$ citing. \\
+          \textbf{Correct dependency}: blocked $\to$ citing. \\
+          \emph{(The participial phrase ``citing concerns\ldots'' is an adverbial clause that should modify the main verb \textit{blocked}, not \textit{acquisition}.)}
+    \item \textbf{Error type}: Modifier Attachment Error. \\
+          \textbf{Incorrect dependency}: elements $\to$ most. \\
+          \textbf{Correct dependency}: crucial $\to$ most. \\
+          \emph{(The adverb \textit{most} should modify the adjective \textit{crucial}, not the noun \textit{elements}.)}
+    \item \textbf{Error type}: Prepositional Phrase Attachment Error. \\
+          \textbf{Incorrect dependency}: declined $\to$ decision. \\
+          \textbf{Correct dependency}: reasons $\to$ decision. \\
+          \emph{(The prepositional phrase ``for the government decision'' should modify \textit{reasons} (reasons for the decision), not \textit{declined}.)}
+    \item \textbf{Error type}: Coordination Attachment Error. \\
+          \textbf{Incorrect dependency}: affects $\to$ one. \\
+          \textbf{Correct dependency}: plants $\to$ one. \\
+          \emph{(In ``\ldots plants and one in Quebec'' the second conjunct \textit{one} should attach to the first conjunct \textit{plants}, not to the verb \textit{affects}.)}
+\end{enumerate}
+}
+
+
 
 
 \part[2] Recall in part (e), the parser uses features which includes words and their part-of-speech (POS) tags. Explain the benefit of using part-of-speech tags as features in the parser?
+
+    \ifans{
+    POS tags encode coarse syntactic categories (noun, verb, adjective, preposition, \ldots) that are shared across many words, so they help the parser in two ways. First, they provide syntactic signal that a bare word string lacks --- e.g.\ knowing that a token is a preposition or an auxiliary verb strongly indicates how it should attach, and they let the parser distinguish words that are spelled the same but play different roles (such as \textit{bank} as a noun vs.\ a verb). Second, because a small set of tags covers the whole vocabulary, POS tags let the model \emph{generalize} to rare or completely unseen words that never appeared (or appeared too rarely) in training --- the parser can still reason about an unknown word via its POS tag, mitigating data sparsity.
+    }
 
 \end{parts}

@@ -79,5 +79,4 @@ When you're done: `conda deactivate` 👋
 |------|------------|
 | `exploring_word_vectors.ipynb` | The assignment notebook 📓 |
 | `env.yml` | Conda environment dependencies 🐍 |
-| `a1.pdf` | The assignment handout 📄 |
 | `imgs/` | Reference plots for sanity-checking your figures 🖼️ |
