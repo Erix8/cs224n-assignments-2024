@@ -10,7 +10,8 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 
 [cs224n website]: https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1246/index.html
 
-> 📈 **Progress:** Assignments 1 & 2 are **done** ✅ — currently hammering away at 3 & 4 🔨
+> 📈 **Progress:** Assignments 1, 2 & 3 are **done** ✅ (A3 code + write-up complete; full GPU
+> training for corpus BLEU is pending, no GPU available) — currently hammering away at 4 🔨
 
 ## 🗂️ Assignment Contents
 
@@ -18,16 +19,18 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 |---|------------|---------|----------|
 | 1 | [Exploring Word Vectors](./assignment1/README.md) | Count-based co-occurrence vectors vs. GloVe: cosine similarity, analogies & bias 🧭 | ✅ Done |
 | 2 | [Word2Vec and Dependency Parsing](./assignment2/README.md) | Word2Vec math & Adam/dropout theory, implement a neural transition-based dependency parser 🧠 | ✅ Done |
-| 3 | [Neural Machine Translation with RNN](./assignment3/README.md) | Seq2Seq translation with attention, BLEU scoring & beam search 🌐 | 👨🏻‍💻 In progress |
+| 3 | [Neural Machine Translation with RNNs](./assignment3/README.md) | Seq2Seq translation with attention, BLEU scoring & beam search 🌐 | ✅ Code + write-up · BLEU pending (no GPU) |
 | 4 | [Self-Attention, Transformers and Pretraining](./assignment4/README.md) | Self-attention math, position embeddings & a pretrained mini-GPT 🤖 | 👨🏻‍💻 In progress |
 
 ## 🏆 Key Results
 
-| A# | Highlight |
-|----|-----------|
-| 2 | Neural dependency parser — **dev UAS 88.65 · test UAS 89.15** |
+| # | Assignment | Highlight | Environment |
+|---|------------|-----------|-------------|
+| 2 | Neural Dependency Parser | **dev UAS 88.65 · test UAS 89.15** | macOS w/ M4 chip |
+| 3 | Neural Machine Translation with RNNs | Code + written analysis done; sanity checks pass; corpus **BLEU** pending (needs GPU) | macOS (CPU sanity checks) · GPU TBD |
+| 4 | Transformers with Pretraining | ... | ... |
 
-*(Results for 3 & 4 will be added once training wraps up.)*
+*(Results for 3's BLEU & 4 will be added once GPU training wraps up.)*
 
 ## 💡 Quick Start
 

@@ -1,9 +1,13 @@
 # 🌐 Assignment 3: Neural Machine Translation with RNNs
 
-> 🚧 **Framework — work in progress.** This is an outline; I'll flesh out the full write-up once
-> I finish training and analysis. Status markers below show where I am. 👨🏻‍💻
+Welcome to the language barrier! 🛫 Assignment 3 is all about __machine translation__ — teaching a model to read a Mandarin Chinese sentence and produce the English equivalent. It's the first time we build a full sequence-to-sequence (__Seq2Seq__) network: a bidirectional LSTM __encoder__, a __decoder__, and — the coolest part — __attention__, which lets the model peek back at the source sentence as it translates, one word at a time. The goal is your own NMT system scoring real __BLEU__ on a held-out test set. 🌐
 
-Welcome to the language barrier! 🛫 Assignment 3 is all about __machine translation__ — teaching a model to read a Mandarin Chinese sentence and produce the English equivalent. It's the first time we build a full sequence-to-sequence (__Seq2Seq__) network: a bidirectional LSTM __encoder__, a __decoder__, and — the coolest part — __attention__, which lets the model peek back at the source sentence as it translates, one word at a time. By the end you've got your own NMT system scoring real __BLEU__ on a held-out test set. 🌐
+## ✅ Status
+
+- **Code (1a–1f): DONE** — all implemented; the provided sanity checks (`1d`, `1e`, `1f`) pass ✅
+- **Written analysis (1g, 1h, 1i, 2a–2d): DONE** — written up in `report/` using the `\ifans{}` format
+- **Full GPU training: PENDING** — no GPU available, so corpus BLEU (>18) and the beam-search diagnostics are not yet produced (see [Results](#-results))
+- The full training pipeline was verified on CPU: a smoke test shows loss decreasing, and `train_local` starts training correctly.
 
 > 🗣️ **"If you talk to a man in a language he understands, that goes to his head. If you talk to
 > him in his language, that goes to his heart."** — Nelson Mandela
@@ -15,50 +19,68 @@ Welcome to the language barrier! 🛫 Assignment 3 is all about __machine transl
 Build a full **Seq2Seq NMT system** (Mandarin → English) with a Bidirectional LSTM encoder,
 a Unidirectional LSTM decoder, and multiplicative attention, in `nmt_model.py`:
 
-1. **Embeddings + 1D convolution** — embed source subwords, then a conv layer (helps with
-   character/morpheme composition). (1a)
-2. **Bidirectional LSTM encoder** — forward + backward hidden/cell states, concatenated. (1b)
-3. **Decoder with attention** — compute attention over encoder states and combine into
-   the context/combined-output vector. (1c, 1d)
-4. **Generation & masking** — `generate_sent_masks` and how padding masks affect attention. (1e, 1f written)
-5. **Train & evaluate** — train on GPU, report corpus **BLEU** (expect > 18). (1g)
-6. **Attention variants (written)** — dot product vs. multiplicative vs. additive attention:
-   one advantage + one disadvantage each. (1h)
+1. **`pad_sents`** — pad a batch to the longest sentence. (1a)
+2. **`ModelEmbeddings`** — source/target embeddings with correct padding indices. (1b)
+3. **`NMT.__init__`** — 1D conv layer, bidirectional encoder LSTM, decoder LSTMCell, and the
+   linear projections (W_h, W_c, W_attProj, W_u, W_vocab) + dropout. (1c)
+4. **`encode`** — embed → 1D conv (kernel 2, `padding="same"`) → packed bidirectional LSTM →
+   decoder init state from concatenated fwd/bwd final states. (1d)
+5. **`decode`** — pre-project encoder states for attention, iterate over target steps. (1e)
+6. **`step`** — the attention core: `e_t = (hᵈᵉᶜ)ᵀ W_attProj hᵉⁿᶜ`, softmax, context `a_t`,
+   then `o_t = dropout(tanh(W_u [a_t; hᵈᵉᶜ]))`. (1f)
+7. **Written:** how `enc_masks` forces attention onto real tokens. (1g)
+8. **Written:** corpus BLEU report (needs GPU; > 18 expected). (1h)
+9. **Written:** dot product vs. multiplicative vs. additive attention pros/cons. (1i)
 
 ### 🔍 Part 2: Analyzing NMT Systems (25 pts)
 
-1. **Why the conv layer helps** — Mandarin characters are whole words or morphemes (电 = electricity,
-   脑 = brain, 电脑 = computer). (Q2.1)
-2. **Error analysis** — four reference/NMT translation pairs; for each: identify the error, give
-   likely reasons (linguistic or model limitation), and propose a fix. (Q2.2)
-3. **BLEU by hand** — compute p₁, p₂, brevity penalty, and BLEU for two candidates; discuss
-   single vs. multiple references and BLEU's pros/cons vs. human eval. (Q2.3)
-4. **Beam search diagnostics** — did translation quality improve over training? How do the
-   beam hypotheses compare? (Q2.4)
+1. **Why the conv layer helps** — Mandarin characters are morphemes/words; a small CNN does cheap
+   local bigram composition while the LSTM handles long-range word composition. (Q2.1)
+2. **Error analysis** — four reference/NMT pairs: number agreement, omission + repetition, rare
+   compound mistranslation, and a Cantonese idiom lost in literal translation. (Q2.2)
+3. **BLEU by hand** — computed p₁, p₂, BP and BLEU for two candidates under two reference sets
+   (verified with `nltk`), plus single vs. multiple references and BLEU's pros/cons. (Q2.3)
+4. **Beam search diagnostics** — quality improves with training; the beam hypotheses are
+   near-synonym variants ranked by score. (Q2.4)
 
 ## 🧠 What I Learned
 
-*(To be written — e.g. how attention lets the decoder peek at the right source words, how BLEU
-works under the hood, why beam search beats greedy decoding.)*
+- **Attention** lets the decoder peek back at *all* encoder hidden states and weight them at each
+  output step — multiplicative attention `e_{t,i} = (hᵗ)ᵀ W_attProj hᵢ` learns a bilinear alignment.
+- **Masking** (`enc_masks`) sets padding positions to `-inf` so softmax gives them zero weight,
+  preventing the model from attending to `<pad>` tokens.
+- **BLEU** is a surface n-gram overlap metric: max-over-references precision + a brevity penalty
+  make it cheap and reproducible, but it can reward degenerate output and ignores semantics.
+- **Beam search** explores a small set of hypotheses and ranks them by model score, generally
+  beating greedy decoding.
 
 ## 🎯 Results
 
-*(To be filled in — report your corpus BLEU, error-analysis findings, beam-search examples.)*
+- **Corpus BLEU:** *pending* — needs GPU training (target > 18).
+- **Verified on CPU:** sanity checks 1d/1e/1f all pass; a smoke test shows training loss decreasing
+  (full model: loss 7.97 → 7.06 → 6.81 over the first 30 iterations).
 
 ## 🛠️ Setup & How to Run
 
-*(Full setup from the handout — conda env, GCP for GPU training, TensorBoard monitoring, and the
-`sanity_check.py` commands for parts 1a–1f.)*
+Uses a PyTorch conda env (e.g. `cs224n`) with the packages in `requirements.txt`. Run the sanity
+checks for the coding parts (in the `assignment3` folder), then train/evaluate:
 
 ```bash
 # Sanity checks (local)
-python sanity_check.py 1a   # … 1b, 1c, 1d, 1e, 1f
+python sanity_check.py 1d
+python sanity_check.py 1e
+python sanity_check.py 1f
 
-# Train locally, then on GPU
+# Train a tiny model locally to verify the pipeline (CPU)
 sh run.sh train_local
+
+# Train / evaluate on GPU (needs a GPU, ~2h; produces model.bin + beam diagnostics)
 sh run.sh train
 sh run.sh test
 ```
+
+> 💡 `run.py` hard-codes a large model (embed 1024 / hidden 768); training the full zh-en corpus
+> on CPU is impractically slow, so `train_local` is only a quick pipeline check.
 
 ## 📁 Files in This Folder
 
@@ -66,15 +88,14 @@ sh run.sh test
 |------|------------|
 | `nmt_model.py` | The Seq2Seq model (encoder, decoder, attention) 🧠 |
 | `model_embeddings.py` | Embedding layer + 1D conv helper |
+| `utils.py` | `pad_sents` (1a) + corpus readers / batching |
 | `run.py` / `run.sh` / `run.bat` | Training / testing drivers 🚀 |
-| `sanity_check.py` | Sanity checks for parts 1a–1f ✅ |
+| `sanity_check.py` | Sanity checks for parts 1d–1f ✅ |
 | `vocab.py`, `vocab.json`, `src.vocab`, `tgt.vocab` | Vocabulary & sentencepiece models 📚 |
 | `src.model`, `tgt.model` | SentencePiece subword models |
 | `beam_search_diagnostics.py` | Beam-search analysis helper 🔍 |
-| `report/` | LaTeX write-up with derivations & answers 📝 |
-| `sanity_check_en_es_data/`, `zh_en_data/` | Small datasets for checks / training 📦 |
+| `report/` | LaTeX write-up with all written answers 📝 |
+| `sanity_check_en_es_data/`, `zh_en_data/` | Small sanity data / training data 📦 |
 | `a3.pdf` | The assignment handout 📄 |
-
-*(Add/remove rows to match the final contents of your folder.)*
 
 Happy translating! 🌐
