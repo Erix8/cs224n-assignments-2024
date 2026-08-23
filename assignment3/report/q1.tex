@@ -146,9 +146,6 @@ After setting up the cloud VM, you should turn it off while you work on the prog
     \textit{Why it is necessary.} Without the masks, the decoder could attend to \texttt{<pad>} tokens, which carry no linguistic content (their hidden states produced by the packed LSTM are effectively meaningless), thereby wasting attention mass and injecting noise into the context vector. Masking forces the model to restrict its attention to the actual source words, keeping the attention weights a valid, normalized distribution over real content and improving translation quality.
     }
 
-
-
-
 \end{parts}
 
 Now it's time to get things running! As noted earlier, we recommend that you develop the code on your personal computer.  Confirm that you are running in the proper conda environment and then execute the following command to train the model on your local machine:
@@ -183,10 +180,6 @@ You should see a significant decrease in loss during the initial iterations (Fig
     \item Download the Gradescope Submission Package from Your Cloud VM
 \end{itemize}
 
-
-
-
-
 \begin{parts}
 \setcounter{partno}{7}
 \part[3] (written) Once your model is done training (\textbf{this should take under 2 hours on the VM}), execute the following command to test the model:
@@ -198,13 +191,8 @@ sh run.sh test
     \ifans{
     As a self-learner without GPU resources, I have not yet trained the full NMT system on the training set, so I cannot report a corpus BLEU score at this time. Once the model is trained on a GPU (expected to take under 2 hours) and evaluated with \texttt{sh run.sh test}, the corpus BLEU score should exceed 18. Parts 1a--1f have been validated via the provided sanity checks and a CPU smoke test (training loss decreasing), so the implementation is ready to be trained whenever GPU access becomes available.
     }
-
-
-
     
     \part[4] (written) In class, we learned about dot product attention, multiplicative attention, and additive attention.  As a reminder, dot product attention is $\be_{t,i} = \bs_t^T\bh_i$, multiplicative attention is $\be_{t,i} = \bs_t^T\bW\bh_i$, and additive attention is $\be_{t,i} = \bv^T \text{tanh}(\bW_1\bh_i + \bW_2\bs_t)$.
-    
-
     
     \begin{subparts}
     \subpart[2] Explain one advantage and one disadvantage of \textit{dot product attention} compared to multiplicative attention.

@@ -14,12 +14,19 @@
 % index TeX's fonts). Loading by filename works on any TeX Live install because
 % the font ships with the distribution.
 \newfontfamily{\monofam}{lmmono10-regular.otf}
+% Make \texttt/\ttfamily (used by \texttt{...} throughout) render with the same
+% LM Mono font. The default mono font under fontspec/CoreText on macOS would
+% otherwise fall back and lose its monospaced code look.
+\setmonofont{lmmono10-regular.otf}[
+    ItalicFont=lmmono10-italic.otf,
+    BoldFont=lmmonolt10-bold.otf,
+    BoldItalicFont=lmmonolt10-boldoblique.otf,
+]
 \usepackage{lastpage} % Required to determine the last page for the footer
 \usepackage{extramarks} % Required for headers and footers
 \usepackage[usenames,dvipsnames]{color} % Required for custom colors
 \usepackage{graphicx} % Required to insert images
 \usepackage{listings} % Required for insertion of code
-\usepackage{courier} % Required for the courier font
 \usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
 \usepackage{enumerate}
 \usepackage{subfigure}
@@ -58,6 +65,8 @@
 \lstset{language=bash,
         frame=none, % Single frame around code
         basicstyle=\monofam, % Use small true type font
+        keywordstyle=\monofam, % no bold mono (lmmono has no bold face)
+        commentstyle=\monofam, % no italic mono
 }
 
 \usepackage{hyperref}

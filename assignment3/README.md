@@ -96,6 +96,6 @@ sh run.sh test
 | `beam_search_diagnostics.py` | Beam-search analysis helper 🔍 |
 | `report/` | LaTeX write-up with all written answers 📝 |
 | `sanity_check_en_es_data/`, `zh_en_data/` | Small sanity data / training data 📦 |
-| `a3.pdf` | The assignment handout 📄 |
+| `a3.pdf` | The assignment handout with my answers 📄 |
 
 Happy translating! 🌐
