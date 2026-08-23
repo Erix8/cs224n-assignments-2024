@@ -140,6 +140,14 @@ After setting up the cloud VM, you should turn it off while you work on the prog
     First explain (in around three sentences) what effect the masks have on the entire attention computation.
     Then explain (in one or two sentences) why it is necessary to use the masks in this way.
 
+    \ifans{
+    \textit{Effect on the entire attention computation.} The masks indicate which source positions are padding tokens: \texttt{enc\_masks} holds a $1$ exactly at every \texttt{<pad>} position and a $0$ at every real token. Inside \texttt{step}, the line \texttt{e\_t.data.masked\_fill\_(enc\_masks.bool(), -float('inf'))} overwrites the attention score $e_{t,i}$ at every padding position with $-\infty$ before the softmax is applied. Because $\text{softmax}(-\infty)_i = 0$, every padding position receives exactly zero attention weight, so the resulting distribution $\alpha_t$ places all of its mass on the genuine source tokens and the probability that would otherwise have leaked onto pads is redistributed over the real words. As a result, the attention output $\ba_t = \sum_i \alpha_{t,i}\henc_i$ becomes a weighted combination of only the meaningful encoder hidden states.
+
+    \textit{Why it is necessary.} Without the masks, the decoder could attend to \texttt{<pad>} tokens, which carry no linguistic content (their hidden states produced by the packed LSTM are effectively meaningless), thereby wasting attention mass and injecting noise into the context vector. Masking forces the model to restrict its attention to the actual source words, keeping the attention weights a valid, normalized distribution over real content and improving translation quality.
+    }
+
+
+
 
 \end{parts}
 
@@ -187,13 +195,37 @@ sh run.sh test
 \end{lstlisting}
     Please report the model's corpus BLEU Score. It should be larger than 18.
     
+    \ifans{
+    As a self-learner without GPU resources, I have not yet trained the full NMT system on the training set, so I cannot report a corpus BLEU score at this time. Once the model is trained on a GPU (expected to take under 2 hours) and evaluated with \texttt{sh run.sh test}, the corpus BLEU score should exceed 18. Parts 1a--1f have been validated via the provided sanity checks and a CPU smoke test (training loss decreasing), so the implementation is ready to be trained whenever GPU access becomes available.
+    }
+
+
 
     
     \part[4] (written) In class, we learned about dot product attention, multiplicative attention, and additive attention.  As a reminder, dot product attention is $\be_{t,i} = \bs_t^T\bh_i$, multiplicative attention is $\be_{t,i} = \bs_t^T\bW\bh_i$, and additive attention is $\be_{t,i} = \bv^T \text{tanh}(\bW_1\bh_i + \bW_2\bs_t)$.
     
+
+    
     \begin{subparts}
     \subpart[2] Explain one advantage and one disadvantage of \textit{dot product attention} compared to multiplicative attention.
+    
+    \ifans{
+    \textbf{Dot product vs.\ multiplicative.} 
+    
+    \textit{Advantage:} dot product attention has no extra learned parameter matrix $\bW$, so it is simpler, cheaper to compute, and requires fewer parameters and less memory; it also reduces to a single inner product rather than a matrix multiplication. 
+    
+    \textit{Disadvantage:} because it uses the identity matrix in place of $\bW$, it cannot learn to re-weight or rotate the query/key interaction, so multiplicative attention with a learned $\bW$ can capture a richer, more flexible relationship between $\bs_t$ and $\bh_i$; dot product is therefore less expressive, and its scores can also grow with the dimension unless scaled.
+    }
+
     \subpart[2] Explain one advantage and one disadvantage of \textit{additive attention} compared to multiplicative attention.
+    
+    \ifans{
+    \textbf{Additive vs.\ multiplicative.} 
+    
+    \textit{Advantage:} additive attention passes the projected query and key through learned projections $\bW_1,\bW_2$ followed by a $\tanh$ nonlinearity, so it is more expressive and can model nonlinear, complex interactions between $\bs_t$ and $\bh_i$; this often gives it an edge in quality, especially in settings where a single bilinear form is too restrictive. 
+    
+    \textit{Disadvantage:} it is more computationally expensive --- it requires two separate linear projections plus a $\tanh$ per (query, key) pair --- whereas multiplicative attention reduces to efficient, hardware-optimized matrix multiplications, so additive attention is slower and has more parameters.
+    }
     \end{subparts}
             
     

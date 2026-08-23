@@ -23,9 +23,9 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 
 ## 🏆 Key Results
 
-| Assignment | Highlight |
-|------------|-----------|
-| 2 | Neural dependency parser — **dev UAS 88.65 · test UAS 89.15** (trained on Apple M4 chip, 16GB RAM) |
+| A# | Highlight |
+|----|-----------|
+| 2 | Neural dependency parser — **dev UAS 88.65 · test UAS 89.15** |
 
 *(Results for 3 & 4 will be added once training wraps up.)*
 

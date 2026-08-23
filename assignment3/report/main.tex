@@ -73,7 +73,9 @@
 \newcommand{\hmwkTitle}{Assignment \#3} % Assignment title
 \newcommand{\hmwkClass}{CS\ 224n Spring 2024} % Course/class
 \newcommand{\hmwkAuthorName}{} % Author name
-% \newcommand{\ifans}[1]{\ifanswers \color{red} \vspace{5mm} \textbf{Solution: } #1 \color{black} \vspace{5mm} \fi}
+% \ifans{} renders a solution in red when \answerstrue is set (mirrors Assignment 2's format).
+% Leave the \ifans line below commented out to hide all solutions.
+\newcommand{\ifans}[1]{\ifanswers \color{red} \textbf{Solution: } #1 \color{black} \fi}
 \newcommand{\TODO}[1]{\color{magenta} \textbf{TODO:} #1 \color{black}}
 
 \input std-macros

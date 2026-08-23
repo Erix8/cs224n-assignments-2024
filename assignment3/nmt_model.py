@@ -86,7 +86,21 @@ class NMT(nn.Module):
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html
 
-
+        # Convolutional layer applied after source embeddings: preserves shape, kernel size 2
+        self.post_embed_cnn = nn.Conv1d(in_channels=embed_size, out_channels=embed_size,
+                                        kernel_size=2, padding="same")
+        # Bidirectional LSTM encoder
+        self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden_size,
+                               bidirectional=True)
+        # Unidirectional LSTM cell decoder (input = [y_t_embed; o_{t-1}], dim = embed_size + hidden_size)
+        self.decoder = nn.LSTMCell(input_size=embed_size + hidden_size, hidden_size=hidden_size)
+        # Linear projections (no bias), as defined in the PDF
+        self.h_projection = nn.Linear(2 * hidden_size, hidden_size, bias=False)      # W_h
+        self.c_projection = nn.Linear(2 * hidden_size, hidden_size, bias=False)      # W_c
+        self.att_projection = nn.Linear(2 * hidden_size, hidden_size, bias=False)    # W_attProj
+        self.combined_output_projection = nn.Linear(3 * hidden_size, hidden_size, bias=False)  # W_u
+        self.target_vocab_projection = nn.Linear(hidden_size, len(vocab.tgt), bias=False)  # W_vocab
+        self.dropout = nn.Dropout(dropout_rate)
 
         ### END YOUR CODE
 
@@ -179,10 +193,26 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/generated/torch.cat.html
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/generated/torch.permute.html
+        
+        # 1. Source embeddings: (src_len, b) -> (src_len, b, e)
+        X = self.model_embeddings.source(source_padded)
 
+        # 2. Post-embedding CNN: CNN expects (b, e, src_len); revert back after.
+        X = self.post_embed_cnn(X.permute(1, 2, 0)).permute(2, 0, 1)
 
+        # 3. Bidirectional encoder with packed sequence.
+        #    encoder output: (src_len, b, h*2); last_hidden/last_cell: (2, b, h)
+        enc_hiddens, (last_hidden, last_cell) = self.encoder(
+            pack_padded_sequence(X, source_lengths))
+        enc_hiddens, _ = pad_packed_sequence(enc_hiddens)
+        enc_hiddens = enc_hiddens.permute(1, 0, 2)  # (b, src_len, h*2)
 
-
+        # 4. Decoder init state = projection of concatenated fwd & bwd final states.
+        init_decoder_hidden = self.h_projection(
+            torch.cat((last_hidden[0], last_hidden[1]), dim=1))  # (b, h)
+        init_decoder_cell = self.c_projection(
+            torch.cat((last_cell[0], last_cell[1]), dim=1))  # (b, h)
+        dec_init_state = (init_decoder_hidden, init_decoder_cell)
 
         ### END YOUR CODE
 
@@ -252,10 +282,23 @@ class NMT(nn.Module):
         ###     Tensor Stacking:
         ###         https://pytorch.org/docs/stable/generated/torch.stack.html
 
+        # 1. Project encoder hidden states for attention: (b, src_len, 2h) -> (b, src_len, h)
+        enc_hiddens_proj = self.att_projection(enc_hiddens)
 
+        # 2. Target embeddings: (tgt_len, b) -> (tgt_len, b, e)
+        Y = self.model_embeddings.target(target_padded)
 
+        # 3. Iterate over each decoder timestep.
+        for Y_t in torch.split(Y, split_size_or_sections=1, dim=0):
+            Y_t = Y_t.squeeze(0)                                   # (b, e)
+            Ybar_t = torch.cat((Y_t, o_prev), dim=1)               # (b, e+h)
+            dec_state, o_t, e_t = self.step(Ybar_t, dec_state,
+                                            enc_hiddens, enc_hiddens_proj, enc_masks)
+            combined_outputs.append(o_t)
+            o_prev = o_t
 
-
+        # 4. Stack list of (b, h) tensors into (tgt_len, b, h)
+        combined_outputs = torch.stack(combined_outputs, dim=0)
 
         ### END YOUR CODE
 
@@ -313,6 +356,12 @@ class NMT(nn.Module):
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/generated/torch.squeeze.html
 
+        # 1. Apply decoder LSTM cell for one step.
+        dec_state = self.decoder(Ybar_t, dec_state)
+        dec_hidden, dec_cell = dec_state
+
+        # 2. Attention scores: e_t = (h^dec_t)^T W_attProj h^enc, shape (b, src_len)
+        e_t = torch.bmm(enc_hiddens_proj, dec_hidden.unsqueeze(2)).squeeze(2)
 
         ### END YOUR CODE
 
@@ -346,7 +395,19 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/generated/torch.cat.html
         ###     Tanh:
         ###         https://pytorch.org/docs/stable/generated/torch.tanh.html
+        
+        # 1. Attention distribution over encoder hidden states.
+        alpha_t = F.softmax(e_t, dim=-1)                    # (b, src_len)
 
+        # 2. Attention output = weighted sum of encoder hidden states.
+        a_t = torch.bmm(alpha_t.unsqueeze(1), enc_hiddens).squeeze(1)  # (b, 2h)
+
+        # 3. Concatenate attention output with decoder hidden -> U_t.
+        U_t = torch.cat((a_t, dec_hidden), dim=1)           # (b, 3h)
+
+        # 4. Project, then 5. tanh + dropout -> combined output O_t.
+        V_t = self.combined_output_projection(U_t)          # (b, h)
+        O_t = self.dropout(torch.tanh(V_t))                 # (b, h)
 
         ### END YOUR CODE
 
