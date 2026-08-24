@@ -34,11 +34,30 @@ where $\mathbf{W}_1, \mathbf{W}_2 \in \mathbb{R}^{d \times d}$ and $\mathbf{b}_1
         You are given that for any permutation matrix $\mathbf{P}$ and any matrix $\mathbf{A}$, the following hold:
         $\text{softmax}(\mathbf{P}\mathbf{A}\mathbf{P}^{\top}) = \mathbf{P}\ \text{softmax}(\mathbf{A})\ \mathbf{P}^{\top} \quad \text{and}\quad \text{ReLU}(\mathbf{P}\mathbf{A}) = \mathbf{P}\ \text{ReLU}(\mathbf{A})$.
 
-        \ifans{}
+        \ifans{
+        Let $\mathbf{Q} = \mathbf{X}\mathbf{W}_Q$, $\mathbf{K} = \mathbf{X}\mathbf{W}_K$, $\mathbf{V} = \mathbf{X}\mathbf{W}_V$ (so that $\mathbf{H} = \text{softmax}(\mathbf{Q}\mathbf{K}^{\top}/\sqrt{d})\,\mathbf{V}$). Since $\mathbf{X}_{\text{perm}} = \mathbf{P}\mathbf{X}$, we have $\mathbf{Q}_{\text{perm}} = \mathbf{P}\mathbf{Q}$, $\mathbf{K}_{\text{perm}} = \mathbf{P}\mathbf{K}$, and $\mathbf{V}_{\text{perm}} = \mathbf{P}\mathbf{V}$. Applying the given softmax identity with $\mathbf{A} = \mathbf{Q}\mathbf{K}^{\top}/\sqrt{d}$ and using $\mathbf{P}^{\top}\mathbf{P} = \mathbf{I}$,
+        \begin{align*}
+        \mathbf{H}_{\text{perm}}
+        &= \text{softmax}\!\left(\frac{\mathbf{P}\mathbf{Q}\mathbf{K}^{\top}\mathbf{P}^{\top}}{\sqrt{d}}\right)\mathbf{P}\mathbf{V}
+         = \mathbf{P}\,\text{softmax}\!\left(\frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d}}\right)\mathbf{P}^{\top}\mathbf{P}\mathbf{V}
+         = \mathbf{P}\,\text{softmax}\!\left(\frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d}}\right)\mathbf{V}
+         = \mathbf{P}\mathbf{H}.
+        \end{align*}
+        For the feed-forward layer, note that $\mathbf{P}\mathbf{1} = \mathbf{1}$ (a permutation matrix maps the all-ones vector to itself), so $\mathbf{1}\mathbf{b}_1 = \mathbf{P}\mathbf{1}\mathbf{b}_1$ and $\mathbf{1}\mathbf{b}_2 = \mathbf{P}\mathbf{1}\mathbf{b}_2$. Hence, applying the given ReLU identity with $\mathbf{A} = \mathbf{H}\mathbf{W}_1 + \mathbf{1}\mathbf{b}_1$,
+        \begin{align*}
+        \mathbf{Z}_{\text{perm}}
+        &= \text{ReLU}\!\left(\mathbf{P}\mathbf{H}\mathbf{W}_1 + \mathbf{1}\mathbf{b}_1\right)\mathbf{W}_2 + \mathbf{1}\mathbf{b}_2
+         = \text{ReLU}\!\left(\mathbf{P}\left(\mathbf{H}\mathbf{W}_1 + \mathbf{1}\mathbf{b}_1\right)\right)\mathbf{W}_2 + \mathbf{P}\mathbf{1}\mathbf{b}_2 \\
+        &= \mathbf{P}\,\text{ReLU}\!\left(\mathbf{H}\mathbf{W}_1 + \mathbf{1}\mathbf{b}_1\right)\mathbf{W}_2 + \mathbf{P}\mathbf{1}\mathbf{b}_2
+         = \mathbf{P}\left[\text{ReLU}\!\left(\mathbf{H}\mathbf{W}_1 + \mathbf{1}\mathbf{b}_1\right)\mathbf{W}_2 + \mathbf{1}\mathbf{b}_2\right]
+         = \mathbf{P}\mathbf{Z}.
+        \end{align*}
+        So the (position-embedding-free) Transformer is permutation-equivariant: shuffling the input tokens merely shuffles the output rows.
+        }
 
         \subpart[1] Think about the implications of the result you derived in part i. \textbf{Explain} why this property of the Transformer model could be problematic when processing text.
 
-        \ifans{}
+        \ifans{Because the model is permutation-equivariant, it cannot use word order at all: it would produce the same (merely reordered) output whether the input is a sentence or any shuffling of its words, so it treats ``dog bites man'' and ``man bites dog'' identically. In natural language, however, word order is crucial --- it determines argument roles and meaning --- so a model that ignores order cannot correctly model the semantics of text.}
     \end{subparts}
 
     \part[2] \textbf{Position embeddings} are vectors that encode the position of each token in the sequence. They are added to the input word embeddings before feeding them into the Transformer.
@@ -58,10 +77,10 @@ where $\mathbf{W}_1, \mathbf{W}_2 \in \mathbb{R}^{d \times d}$ and $\mathbf{b}_1
     \begin{subparts}
         \subpart[1] Do you think the position embeddings will help the issue you identified in part (a)? If yes, explain how and if not, explain why not.
 
-        \ifans{}
+        \ifans{Yes. After adding the position embeddings, the input becomes $\mathbf{X}_{\text{pos}} = \mathbf{X} + \mathbf{\Phi}$, where $\mathbf{\Phi}$ encodes the absolute position of each token and is \emph{not} permuted along with the tokens. Hence permuting the tokens now gives $\mathbf{P}\mathbf{X} + \mathbf{\Phi} \neq \mathbf{P}(\mathbf{X} + \mathbf{\Phi})$ in general, so the output is no longer simply the permuted output of the original input: the position-dependent signal breaks the permutation equivariance, and the model can now distinguish different orderings of the same tokens.}
         \subpart[1] Can the position embeddings for two different tokens in the input sequence be the same? If yes, provide an example. If not, explain why not.
 
-        \ifans{}
+        \ifans{Yes. The embeddings are built from sine and cosine, which are periodic functions of the position $t$, so two different positions can receive the same embedding. For example, in the simplest case $d = 2$, $\mathbf{\Phi}(t) = \left(\sin t,\ \cos t\right)$ is periodic with period $2\pi$, so positions $t$ and $t + 2\pi k$ ($k \in \mathbb{Z}$) yield identical embeddings. More generally, the $i$-th frequency pair $\left(\sin\left(t/10000^{2i/d}\right), \cos\left(t/10000^{2i/d}\right)\right)$ repeats every $2\pi\cdot 10000^{2i/d}$ positions, so if the sequence is long enough for two positions to differ by a common period of all the sinusoids, their full position embeddings coincide (and even before an exact collision, far-apart positions can receive very similar --- and, with floating-point precision, eventually numerically equal --- embeddings).}
     \end{subparts}
 \end{parts}
 
