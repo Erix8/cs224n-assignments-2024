@@ -10,7 +10,7 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 
 [cs224n website]: https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1246/index.html
 
-> 📈 **Progress:** Assignments 1, 2 & 3 are **done** ✅ (A3 code + write-up complete; full GPU training for corpus BLEU is pending, no GPU available) — currently hammering away at 4 🔨
+> 📈 **Progress:** Assignments 1 & 2 are **done** ✅; Assignment 3 code + write-up **done** ✅ (full GPU training for corpus BLEU is pending, no GPU available); Assignment 4 **code + write-up done** ✅ (all GPU training pending, no GPU available) 🚧
 
 ## 🗂️ Assignment Contents
 
@@ -18,8 +18,8 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 |---|------------|---------|----------|
 | 1 | [Exploring Word Vectors](./assignment1/README.md) | Count-based co-occurrence vectors vs. GloVe: cosine similarity, analogies & bias 🧭 | ✅ Done |
 | 2 | [Word2Vec and Dependency Parsing](./assignment2/README.md) | Word2Vec math, Adam/dropout theory & neural dependency parser 🧠 | ✅ Done |
-| 3 | [Neural Machine Translation with RNNs](./assignment3/README.md) | Seq2Seq translation with attention, BLEU scoring & beam search 🌐 | ✅ Code + write-up |
-| 4 | [Self-Attention, Transformers & Pretraining](./assignment4/README.md) | Self-attention math, position embeddings & a pretrained mini-GPT 🤖 | 👨🏻‍💻 In progress |
+| 3 | [Neural Machine Translation with RNNs](./assignment3/README.md) | Seq2Seq translation with attention, BLEU scoring & beam search 🌐 | ✅ Code + write-up (GPU training pending 🚧) |
+| 4 | [Self-Attention, Transformers & Pretraining](./assignment4/README.md) | Self-attention math, position embeddings & a pretrained mini-GPT 🤖 | ✅ Code + write-up (GPU training pending 🚧) |
 
 ## 🏆 Key Results
 
@@ -27,7 +27,7 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 |---|------------|-----------|-------------|
 | 2 | Neural Dependency Parser | **dev UAS 88.65 · test UAS 89.15** | macOS w/ M4 chip |
 | 3 | Neural Machine Translation with RNNs | Code + written analysis done; sanity checks pass; corpus **BLEU** pending (needs GPU) | macOS (CPU sanity checks) · GPU TBD |
-| 4 | Transformers with Pretraining | ... | ... |
+| 4 | Transformers with Pretraining | London baseline **5.0%** computed; code + written analysis done; dev/test accuracies **pending** (needs GPU) | macOS w/ M4 chip (CPU/MPS) · GPU TBD |
 
 *(Results for 3's BLEU & 4 will be added once GPU training wraps up.)*
 
