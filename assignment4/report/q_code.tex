@@ -209,7 +209,22 @@ For higher dimensional feature vectors, this interpretation allows us to compute
 
 Show that the elements of the vector in Equation~\ref{eq:rope_matrix} can be obtained from Equation~\ref{eq:rope_elementwise}. Note that some additional operations like reshaping are necessary to make the two expressions equal but you do not need to provide a detailed derivation for full points. 
 
-\ifans{}
+\ifans{
+For each consecutive pair of features $\left(x^{(2i-1)}_t, x^{(2i)}_t\right)$, $i \in \{1,\dots,d/2\}$, Equation~\ref{eq:rope_matrix} applies the $2\times 2$ rotation
+\[
+\begin{pmatrix} \cos t\theta_i & -\sin t\theta_i \\ \sin t\theta_i & \cos t\theta_i \end{pmatrix}
+\begin{pmatrix} x^{(2i-1)}_t \\ x^{(2i)}_t \end{pmatrix}
+=
+\begin{pmatrix} x^{(2i-1)}_t \cos t\theta_i - x^{(2i)}_t \sin t\theta_i \\ x^{(2i-1)}_t \sin t\theta_i + x^{(2i)}_t \cos t\theta_i \end{pmatrix}.
+\]
+Writing the pair as the complex number $z_i = x^{(2i-1)}_t + i\,x^{(2i)}_t$, Equation~\ref{eq:rope_elementwise} computes
+\[
+\left(\cos t\theta_i + i\sin t\theta_i\right)\left(x^{(2i-1)}_t + i x^{(2i)}_t\right)
+= \underbrace{x^{(2i-1)}_t \cos t\theta_i - x^{(2i)}_t \sin t\theta_i}_{\text{real part}}
++ i\,\underbrace{\left(x^{(2i-1)}_t \sin t\theta_i + x^{(2i)}_t \cos t\theta_i\right)}_{\text{imaginary part}},
+\]
+so the real part equals the first rotated component and the imaginary part equals the second. Hence the two expressions give the same elements: reshape the $d$-dimensional vector into $d/2$ complex numbers (pairing features $(2i-1, 2i)$), multiply element-wise by $e^{it\theta_i} = \cos t\theta_i + i\sin t\theta_i$, then view the resulting complex numbers back as real pairs and flatten.
+}
 
 \subpart[1] \textbf{Relative Embeddings.} Now we will show that the dot product of the RoPE embeddings of two vectors at positions $t_1$ and $t_2$ depends on the relative position $t_1 - t_2$ only. 
 
@@ -219,7 +234,22 @@ Show that $\langle \text{RoPE}(z_1, t_1), \text{RoPE}(z_2, t_2) \rangle = \langl
 
 (Hint: Dot product of vectors represented as complex numbers is given by $\langle z_1, z_2 \rangle = \Re(\overline{z_1} z_2)$. For a complex number $z = a + ib\ (a,b\in\R$), $\Re(z) = a$ indicates the real component of $z$ and $\bar{z} = a - ib$ is the complex conjugate of $z$.)
 
-\ifans{}
+\ifans{
+RoPE rotates the complex representation by the position-dependent angle $t\theta$, i.e.~$\text{RoPE}(z, t) = z\,e^{it\theta}$. Using the hint $\langle z_1, z_2\rangle = \Re(\overline{z_1}z_2)$,
+\[
+\langle \text{RoPE}(z_1, t_1), \text{RoPE}(z_2, t_2)\rangle
+= \Re\left(\overline{z_1 e^{it_1\theta}}\cdot z_2 e^{it_2\theta}\right)
+= \Re\left(\overline{z_1} z_2\, e^{i(t_2 - t_1)\theta}\right),
+\]
+while
+\[
+\langle \text{RoPE}(z_1, t_1 - t_2), \text{RoPE}(z_2, 0)\rangle
+= \Re\left(\overline{z_1 e^{i(t_1-t_2)\theta}}\cdot z_2\right)
+= \Re\left(\overline{z_1} z_2\, e^{-i(t_1-t_2)\theta}\right)
+= \Re\left(\overline{z_1} z_2\, e^{i(t_2-t_1)\theta}\right).
+\]
+The two expressions are identical: they both equal $\Re\left(\overline{z_1} z_2\, e^{i(t_2 - t_1)\theta}\right)$, which depends only on the relative position $t_1 - t_2$ (through the phase $e^{i(t_2-t_1)\theta}$), not on the absolute positions.
+}
 
 
 \subpart[8] In the provided code, RoPE is implemented using the functions \texttt{precompute\_rotary\_emb} and \texttt{apply\_rotary\_emb} in \texttt{src/attention.py}. You need to implement these functions and the parts of code marked \texttt{[part g]} in \texttt{src/attention.py} and \texttt{src/run.py} to use RoPE in the model.
@@ -264,21 +294,31 @@ We'll score your model as to whether it gets at least 30\% accuracy on the test 
 
 \part[1] Succinctly explain why the pretrained (vanilla) model was able to achieve an accuracy of above 10\%, whereas the non-pretrained model was not.
 
-\ifans{}
+\ifans{
+The non-pretrained model is trained from scratch only on the finetuning corpus (a few thousand name--birthplace pairs). Since the input ``Where was X born?'' contains no information about the answer, the model cannot generalize beyond memorizing training examples, so on unseen names it collapses toward the prior over common birthplaces (roughly the London baseline of $\sim$5\%). The pretrained model, by contrast, first learns span corruption on a large Wikipedia corpus, where it acquires statistical knowledge about people and places, including name--birthplace associations. Finetuning then teaches it to express that stored knowledge in the question--answer format, allowing it to retrieve plausible birthplaces for names it has knowledge about, which pushes dev accuracy well above chance ($\geq 15\%$).
+}
 
 \part[2] Take a look at some of the correct predictions of the pretrain+finetuned vanilla model, as well as some of the errors.
 We think you'll find that it's impossible to tell, just looking at the output, whether the model \textit{retrieved} the correct birth place, or \textit{made up} an incorrect birth place.
 Consider the implications of this for user-facing systems that involve pretrained NLP components.
 Come up with two \textbf{distinct} reasons why this model behavior (i.e. unable to tell whether it's retrieved or made up) may cause concern for such applications, and an example for each reason.
 
-\ifans{}
+\ifans{
+\textbf{(1) Misinformation to users.} Correct retrievals and hallucinated answers are produced in the same fluent, confident form, so users (and any downstream system) cannot distinguish fact from fabrication and will treat invented answers with the same authority as true ones. \emph{Example:} a user-facing assistant answers ``Where was person X born?'' with a confidently stated but wrong city; the user, having no way to tell it was invented, may propagate the false fact (e.g., in a biography or travel plan).
+
+\textbf{(2) Lack of auditability and accountability.} Because one cannot tell whether an output was recalled from the model's (pretraining) knowledge or invented at generation time, errors cannot be attributed to the data or to the model, which makes debugging, oversight, and accountability difficult; in addition, ``retrieved'' answers can silently carry biases, outdated facts, or sensitive information from the pretraining corpus, and ``made-up'' answers can carry stereotyped associations, all looking identical in the output. \emph{Example:} a downstream fact-checking or screening system ingests these predictions and cannot flag which claims require verification, so biased or false claims flow onward unquestioned, and systematic errors go unnoticed.
+}
 
 \part[2] If your model didn't see a person's name at pretraining time, and that person was not seen at fine-tuning time either, it is not possible for it to have ``learned'' where they lived.
 Yet, your model will produce \textit{something} as a predicted birth place for that person's name if asked.
 Concisely describe a strategy your model might take for predicting a birth place for that person's name, and one ethical concern this raises for the use of such applications.\\
 (While 4b discussed the problems that could arise from made up predictions, 4c asks for a mechanism the model could be using for generating birth places of people not seen at fine-tuning time and why such a mechanism could be problematic.)
 
-\ifans{}
+\ifans{
+\textbf{Strategy.} Having never seen the person, the model cannot retrieve a stored fact. Instead, it conditions on the question template and on surface features of the name (spelling and phonetic patterns, token overlaps with names seen during pretraining/finetuning) and generates the birth place that maximizes likelihood under the name$\rightarrow$place distribution it learned --- effectively an analogical guess: names that resemble those of a given country/ethnicity are mapped to that country's common cities, or, failing any strong cue, the model falls back to the most frequent places in its training distribution.
+
+\textbf{Ethical concern.} This mechanism makes judgments about people from superficial features of their names, which is a form of stereotyping: it can misattribute nationality or ethnicity, perpetuate demographic stereotypes, and, when deployed in applications such as automated background checks, hiring screens, or profile/search systems, can produce discriminatory or defamatory outputs about real individuals based purely on how their name looks.
+}
 
 \end{parts}
 

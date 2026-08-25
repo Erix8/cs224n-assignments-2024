@@ -66,13 +66,16 @@ model = None
 if args.variant == 'vanilla':
     # TODO: [part c] Make some model here
     ### YOUR CODE HERE ###
-    pass
+    model = models.GPT(mconf)
+    model.to(device)
     ### END YOUR CODE ###
 elif args.variant == 'rope':
     # TODO: [part g] Make some other model here
     # set mconf.rope parameter
     ### YOUR CODE HERE ###
-    pass
+    mconf.rope = True
+    model = models.GPT(mconf)
+    model.to(device)
     ### END YOUR CODE ###
 else:
     raise ValueError("Unknown model variant")
@@ -102,7 +105,19 @@ if args.function == 'pretrain':
     # writer=writer
 
     ### YOUR CODE HERE ###
-    pass
+    tconf = trainer.TrainerConfig(
+        max_epochs=650,
+        batch_size=128,
+        learning_rate=args.pretrain_lr,
+        lr_decay=True,
+        warmup_tokens=512*20,
+        final_tokens=650*len(pretrain_dataset)*block_size,
+        num_workers=4,
+        writer=writer,
+        ckpt_path=args.writing_params_path,
+    )
+    trainer_obj = trainer.Trainer(model, pretrain_dataset, None, tconf)
+    trainer_obj.train()
     ### END YOUR CODE ###
 elif args.function == 'finetune':
     assert args.writing_params_path is not None
@@ -141,7 +156,30 @@ elif args.function == 'finetune':
     #     number of epochs for each case.
 
     ### YOUR CODE HERE ###
-    pass
+    # If a pretrained model is provided, load its parameters.
+    if args.reading_params_path is not None:
+        model.load_state_dict(torch.load(args.reading_params_path))
+
+    # Build the finetuning dataset (same vocab as the pretraining corpus).
+    finetune_dataset = dataset.NameDataset(pretrain_dataset,
+        open(args.finetune_corpus_path, encoding='utf-8').read())
+
+    # Without a pretrained model we need more epochs (75); with one, 10 suffice.
+    max_epochs = 10 if args.reading_params_path is not None else 75
+
+    tconf = trainer.TrainerConfig(
+        max_epochs=max_epochs,
+        batch_size=256,
+        learning_rate=args.finetune_lr,
+        lr_decay=True,
+        warmup_tokens=512*20,
+        final_tokens=200*len(pretrain_dataset)*block_size,
+        num_workers=4,
+        writer=writer,
+        ckpt_path=args.writing_params_path,
+    )
+    trainer_obj = trainer.Trainer(model, finetune_dataset, None, tconf)
+    trainer_obj.train()
     ### END YOUR CODE ###
 elif args.function == 'evaluate':
     assert args.outputs_path is not None
