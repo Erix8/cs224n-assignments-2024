@@ -52,8 +52,8 @@ You'll need **Python 3.8+** (Anaconda makes life easy — grab it
 [here](https://www.anaconda.com/download/), ~3GB free disk space required).
 
 ```bash
-# 1. Create the environment from env.yml
-conda env create -f env.yml
+# 1. Create the shared environment from the repo root (env.yml)
+conda env create -f ../env.yml
 
 # 2. Activate it 🎉
 conda activate cs224n
@@ -78,5 +78,6 @@ When you're done: `conda deactivate` 👋
 | File | What it is |
 |------|------------|
 | `exploring_word_vectors.ipynb` | The assignment notebook 📓 |
-| `env.yml` | Conda environment dependencies 🐍 |
 | `imgs/` | Reference plots for sanity-checking your figures 🖼️ |
+
+> 🐍 The shared conda environment lives at the **repo root**: `./env.yml`.

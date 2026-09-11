@@ -89,8 +89,9 @@ what injects the world knowledge; RoPE's relative positions add a further gain (
 
 ## 🛠️ Setup & How to Run
 
-**Local dev (no GPU).** The repo runs under a conda env with PyTorch (`cs224n` env here; any env with
-torch works). There is **no CUDA** on this machine — Apple Silicon MPS is available, and `run.py`
+**Local dev (no GPU).** The repo runs under the shared conda env defined at the repo root in `env.yml`
+(`conda env create -f env.yml`, then `conda activate cs224n`); it ships PyTorch, so any equivalent
+torch env works too. There is **no CUDA** on this machine — Apple Silicon MPS is available, and `run.py`
 automatically uses it for the `vanilla` variant (the `rope` variant falls back to CPU). To debug
 locally you may need to set `num_workers=0` in `run.py` (multi-process data loading can fail on local
 machines, as the handout warns).
@@ -131,9 +132,6 @@ Pre-baked scripts for all three pipelines (vanilla w/ and w/o pretraining, rope)
 | `collect_submission.sh` / `.bat` | Build `assignment4_submission.zip` for Gradescope 📦 |
 | `london_baseline_accuracy.txt` | London baseline accuracy (5.0%) — required submission file ✅ |
 | `a4.pdf` | The assignment handout with my answers 📄 |
-
-> ✅ GPU training is complete: the `*.params` + `*.predictions` files and the `expt/` TensorBoard logs
-> have been produced. (This is a personal study repo, so no submission zip is built.)
 
 Happy Pretraining! 🤖
 

@@ -32,8 +32,24 @@ For official course stuff (schedule, lectures, assignment overviews), check out 
 
 ## 💡 Quick Start
 
-Each assignment folder has its own README with full setup + run instructions, plus its own condaenv file (`env.yml` for a1, `local_env.yml` for a2, `env-cpu.yml`/`env-gpu.yml` for a3, …).
+All four assignments share a **single conda environment** defined once in the repo root
+(`env.yml`) — it bundles the deps for every assignment (word vectors, PyTorch parsing, NMT and the
+mini-GPT). Each assignment folder still has its own README with the exact run commands.
 
-TL;DR: create & activate the env, then get coding! 🐍
+```bash
+# 1. Create the shared environment from the repo root
+conda env create -f env.yml
+
+# 2. Activate it 🎉
+conda activate cs224n
+
+# 3. Register the Jupyter kernel (needed for Assignment 1)
+python -m ipykernel install --user --name cs224n
+```
+
+Then `cd` into the assignment you want and follow its README. When you're done: `conda deactivate` 👋
+
+> 🖥️ **GPU training** (Assignments 3 & 4 ran on an AutoDL RTX 4090): add the CUDA toolkit on top,
+> e.g. `conda install nvidia::cuda-toolkit==12.1.1`.
 
 Happy NLP-ing! 🤗

@@ -60,8 +60,9 @@ a Unidirectional LSTM decoder, and multiplicative attention, in `nmt_model.py`:
 
 ## 🛠️ Setup & How to Run
 
-Uses a PyTorch conda env (e.g. `cs224n`) with the packages in `requirements.txt`. Run the sanity
-checks for the coding parts (in the `assignment3` folder), then train/evaluate:
+Uses the shared `cs224n` conda environment from the repo root `env.yml` (the package list is also kept
+in `requirements.txt` in this folder). Run the sanity checks for the coding parts (in the
+`assignment3` folder), then train/evaluate:
 
 ```bash
 # Sanity checks (local)

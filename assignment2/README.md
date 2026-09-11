@@ -64,17 +64,15 @@ Trained on an Apple M4 with 16 GB memory. 🍎
 
 ## 🛠️ Setup & How to Run
 
-You'll need PyTorch. The `cs224n` environment from Assignment 1 works if you add the deps in
-`local_env.yml`:
+You'll need PyTorch. The shared `cs224n` environment from the repo root `env.yml` already includes all
+the deps for this assignment (PyTorch, torchvision, docopt, tqdm, …):
 
 ```bash
-# 1. Activate your old environment (or create a fresh one with local_env.yml)
-conda activate cs224n
+# 1. Create (or reuse) the shared environment — run from the repo root
+conda env create -f env.yml   # skip if you already created it for Assignment 1
 
-# 2. Install the missing pieces
-conda install docopt
-conda install pytorch torchvision -c pytorch
-conda install -c anaconda tqdm
+# 2. Activate it
+conda activate cs224n
 ```
 
 Then sanity-check and train:
@@ -108,8 +106,9 @@ When you're done: `conda deactivate` 👋
 | `utils/` | Data loading, feature extraction & preprocessing helpers 🛠️ |
 | `report/` | LaTeX write-up with all the derivations & answers 📝 |
 | `data/` | Dataset (PTB / UDv1) 📦 |
-| `local_env.yml` | Conda environment dependencies 🐍 |
 | `collect_submission.sh` | Collect code + report into a submission zip 📦 |
 | `a2.pdf` | The assignment handout with my answers 📄 |
+
+> 🐍 The shared conda environment lives at the **repo root**: `./env.yml`.
 
 Happy parsing! 🌳
