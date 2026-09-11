@@ -105,6 +105,10 @@ python src/run.py evaluate vanilla wiki.txt  \
 
 Training will take less than 10 minutes (on GCP).  Report your model's accuracy on the dev set (as printed by the second command above). Similar to assignment 3, we also have Tensorboard logging in assignment 4 for debugging. It can be launched using \texttt{tensorboard --logdir expt/}.  Don't be surprised if it is well below 10\%; we will be digging into why in Part 4. As a reference point, we want to also calculate the accuracy the model would have achieved if it had just predicted ``London'' as the birth place for everyone in the dev set. Fill in \texttt{london\_baseline.py} to calculate the accuracy of that approach and report your result in the file. You should be able to leverage existing code such that the file is only a few lines long.
 
+\ifans{
+The model finetuned \emph{without} pretraining reached a \textbf{dev accuracy of 2.2\%} (11/500). As the handout anticipates, this is well below 10\% --- in fact even below the London baseline of \textbf{5.0\%} (computed by \texttt{london\_baseline.py} and stored in \texttt{london\_baseline\_accuracy.txt}). Without pretraining the model has no stored name--birthplace knowledge, so on unseen names it scatters its predictions across many places and fails even to match the constant ``London'' guess.
+}
+
 
 \part[10]\textbf{Define a \textit{span corruption} function for pretraining.}\\
 In the file \texttt{src/dataset.py}, implement the \texttt{\_\_getitem\_\_()} function for the dataset class \\ \texttt{CharCorruptionDataset}.
@@ -151,6 +155,10 @@ python src/run.py evaluate vanilla wiki.txt  \
 \end{lstlisting}
 
 We expect the dev accuracy will be at least 15\%, and will expect a similar accuracy on the held out test set.
+
+\ifans{
+After span-corruption pretraining on \texttt{wiki.txt} followed by 10 epochs of finetuning, the vanilla model reached a \textbf{dev accuracy of 28.2\%} (141/500), comfortably above the 15\% threshold and far above the 2.2\% obtained without pretraining. This confirms that pretraining supplies the world knowledge that finetuning then elicits in question--answer form. (The test set labels are held out, so only the predictions are written out for it.)
+}
 
 \part[11] \textbf{Write and try out a different kind of position embeddings (Budget about 1 hour for training)}\\
 
@@ -283,6 +291,10 @@ python src/run.py evaluate rope wiki.txt  \
 
 
 We'll score your model as to whether it gets at least 30\% accuracy on the test set, which has answers held out.
+
+\ifans{
+The RoPE model reached a \textbf{dev accuracy of 34.6\%} (173/500), improving on the vanilla model's 28.2\% under identical hyperparameters. This supports the intuition that encoding \emph{relative} rather than absolute positions helps the model generalize. The test labels are held out, so test accuracy is scored by the grader; the dev accuracy is the observable signal here.
+}
 
 \end{subparts}
 

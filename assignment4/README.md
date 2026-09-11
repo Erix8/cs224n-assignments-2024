@@ -1,9 +1,5 @@
 # 🤖 Assignment 4: Self-Attention, Transformers & Pretraining
 
-> 🚧 **No GPU available.** All written answers and all code are done and verified locally, but the
-> GPU training steps (Parts 3d / 3f / 3g-iii) have **not** been run yet — so no trained model params,
-> no dev/test predictions, and no final accuracies below. Status markers below show where I am. 👨🏻‍💻
-
 And here we are — the grand finale! 🏁 Assignment 4 dives into the very thing powering modern LLMs:
 **transformers**. You'll start by wrestling with the math of **self-attention** (and why multi-headed
 attention beats single-headed), explore how **position embeddings** give transformers a sense of word
@@ -16,14 +12,13 @@ it a few facts about the world and watching it "remember" where famous people we
 
 - **Part 1 (Attention Exploration, 14 pts, written): DONE** ✅ — all 8 subparts answered in `report/q_math.tex`
 - **Part 2 (Position Embeddings, 6 pts, written): DONE** ✅ — all 4 subparts answered in `report/q_pos_enc.tex`
-- **Part 3 (Pretrained Transformers & Knowledge Access, 35 pts, coding): code DONE, training PENDING** 🚧
-  - 3c `finetune` in `run.py` — implemented; CPU smoke test shows loss decreasing ✅
-  - 3d `london_baseline.py` — done, **baseline = 5.0%** (written to `london_baseline_accuracy.txt`) ✅
-  - 3e `CharCorruptionDataset.__getitem__` — implemented & format-verified locally ✅
-  - 3f pretrain — code written & CPU smoke-tested; **full pretrain (~40–60 min) not run** ⏳
-  - 3g RoPE — math (i)+(ii) written in `report/q_code.tex`; code (iii) implemented & numerically verified ✅; **RoPE training not run** ⏳
-- **Part 4 (Considerations in Pretrained Knowledge, 5 pts, written): DONE (draft)** ✅ — in `report/q_code.tex` (may refine once I can inspect real predictions)
-- The LaTeX report compiles cleanly with `pdflatex`.
+- **Part 3 (Pretrained Transformers & Knowledge Access, 35 pts, coding): DONE** ✅
+  - 3c `finetune` in `run.py` — implemented ✅
+  - 3d `london_baseline.py` + finetune-without-pretraining — **London baseline 5.0%**, no-pretrain dev accuracy **2.2%** ✅
+  - 3e `CharCorruptionDataset.__getitem__` — implemented & format-verified ✅
+  - 3f pretrain → finetune — **vanilla dev accuracy 28.2%** (vs. 2.2% without pretraining) ✅
+  - 3g RoPE — math (i)+(ii) in `report/q_code.tex`; code (iii) implemented & numerically verified; **RoPE dev accuracy 34.6%** ✅
+- **Part 4 (Considerations in Pretrained Knowledge, 5 pts, written): DONE** ✅ — in `report/q_code.tex`
 
 ## 📋 What's Inside
 
@@ -48,12 +43,12 @@ Work with the self-attention equations and motivate multi-headed attention:
 Train a mini-GPT (Karpathy's `minGPT`) to answer *"Where was [person] born?"*:
 
 1. **Finetune without pretraining** — implement `finetune` in `run.py` (vanilla). (3c) ✅
-2. **Make predictions (no pretraining)** — eval on dev/test; also `london_baseline.py`. (3d) 🚧 baseline done, training pending
+2. **Make predictions (no pretraining)** — eval on dev/test; also `london_baseline.py`. (3d) ✅ dev **2.2%**, London baseline 5.0%
 3. **Span corruption pretraining** — implement `CharCorruptionDataset.__getitem__` in `dataset.py` (T5-style). (3e) ✅
 4. **Pretrain → finetune → predict** — span-corruption pretraining on `wiki.txt`, then finetune on
-   birthplace pairs. (3f) 🚧 code done, training pending
+   birthplace pairs. (3f) ✅ dev **28.2%**
 5. **RoPE** — implement rotary positional embeddings (`precompute_rotary_emb` / `apply_rotary_emb`
-   in `src/attention.py`), with written math (complex-number rotation, relative-position property). (3g) ✅ math + code; 🚧 training pending
+   in `src/attention.py`), with written math (complex-number rotation, relative-position property). (3g) ✅ dev **34.6%**
 
 ### ⚠️ Part 4: Considerations in Pretrained Knowledge (5 pts) — written
 
@@ -79,16 +74,18 @@ what the model does for unseen names and the ethical concern. (4a–4c)
 
 ## 🎯 Results
 
-*(Incomplete — GPU training pending.)*
+Trained on a single AutoDL NVIDIA RTX 4090; evaluated on the 500-example dev set. The test set labels
+are held out (scored by the grader), so only predictions are written out for it.
 
 | Model | Dev accuracy | Test accuracy |
 |-------|--------------|---------------|
-| London baseline (everyone → "London") | **5.0%** (computed locally, `london_baseline_accuracy.txt`) | — |
-| Vanilla, no pretraining | ⏳ pending | ⏳ pending |
-| Vanilla, pretrain → finetune | ⏳ pending (expect ≥15%) | ⏳ pending |
-| RoPE, pretrain → finetune | ⏳ pending (expect ≥30% on test) | ⏳ pending |
+| London baseline (everyone → "London") | **5.0%** (`london_baseline_accuracy.txt`) | — |
+| Vanilla, no pretraining | **2.2%** (11/500) | (no labels) |
+| Vanilla, pretrain → finetune | **28.2%** (141/500) ✅ >15% | (no labels; expect ~15%+) |
+| RoPE, pretrain → finetune | **34.6%** (173/500) | (no labels; expect ≥30%) |
 
-Examples of correct vs. made-up predictions will be added once the trained models exist.
+The jump from 2.2% (no pretraining) → 28.2% (pretraining) shows that span-corruption pretraining is
+what injects the world knowledge; RoPE's relative positions add a further gain (28.2% → 34.6%).
 
 ## 🛠️ Setup & How to Run
 
@@ -98,8 +95,8 @@ automatically uses it for the `vanilla` variant (the `rope` variant falls back t
 locally you may need to set `num_workers=0` in `run.py` (multi-process data loading can fail on local
 machines, as the handout warns).
 
-**GPU training.** Follow the handout's GCP/Colab guide; the three training runs take roughly
-10 min (3d), 1 h (3f) and 1 h (3g) respectively.
+**GPU training (DONE).** All runs were executed on a single AutoDL RTX 4090 (PyTorch 2.x image); the
+three training runs took roughly 10 min (3d), 1 h (3f) and 1 h (3g) respectively.
 
 ```bash
 # Dataset sanity
@@ -135,8 +132,8 @@ Pre-baked scripts for all three pipelines (vanilla w/ and w/o pretraining, rope)
 | `london_baseline_accuracy.txt` | London baseline accuracy (5.0%) — required submission file ✅ |
 | `a4.pdf` | The assignment handout with my answers 📄 |
 
-> ⏳ After GPU training: add `*.params` + `*.predictions` files and the `expt/` TensorBoard logs;
-> regenerate `assignment4_submission.zip` via `collect_submission.sh`.
+> ✅ GPU training is complete: the `*.params` + `*.predictions` files and the `expt/` TensorBoard logs
+> have been produced. (This is a personal study repo, so no submission zip is built.)
 
 Happy Pretraining! 🤖
 

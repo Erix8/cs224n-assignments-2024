@@ -1,2 +1,8 @@
 .DS_Store
 __pycache__/
+# Large training artifacts (exceed GitHub limits / bloat the repo)
+assignment3/model.bin
+assignment3/model.bin.optim
+assignment3/runs/
+assignment4/expt/
+*.params

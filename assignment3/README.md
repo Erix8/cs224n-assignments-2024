@@ -2,13 +2,6 @@
 
 Welcome to the language barrier! 🛫 Assignment 3 is all about __machine translation__ — teaching a model to read a Mandarin Chinese sentence and produce the English equivalent. It's the first time we build a full sequence-to-sequence (__Seq2Seq__) network: a bidirectional LSTM __encoder__, a __decoder__, and — the coolest part — __attention__, which lets the model peek back at the source sentence as it translates, one word at a time. The goal is your own NMT system scoring real __BLEU__ on a held-out test set. 🌐
 
-## ✅ Status
-
-- **Code (1a–1f): DONE** — all implemented; the provided sanity checks (`1d`, `1e`, `1f`) pass ✅
-- **Written analysis (1g, 1h, 1i, 2a–2d): DONE** — written up in `report/` using the `\ifans{}` format
-- **Full GPU training: PENDING** — no GPU available, so corpus BLEU (>18) and the beam-search diagnostics are not yet produced (see [Results](#-results))
-- The full training pipeline was verified on CPU: a smoke test shows loss decreasing, and `train_local` starts training correctly.
-
 > 🗣️ **"If you talk to a man in a language he understands, that goes to his head. If you talk to
 > him in his language, that goes to his heart."** — Nelson Mandela
 
@@ -29,7 +22,7 @@ a Unidirectional LSTM decoder, and multiplicative attention, in `nmt_model.py`:
 6. **`step`** — the attention core: `e_t = (hᵈᵉᶜ)ᵀ W_attProj hᵉⁿᶜ`, softmax, context `a_t`,
    then `o_t = dropout(tanh(W_u [a_t; hᵈᵉᶜ]))`. (1f)
 7. **Written:** how `enc_masks` forces attention onto real tokens. (1g)
-8. **Written:** corpus BLEU report (needs GPU; > 18 expected). (1h)
+8. **Written:** corpus BLEU report — **19.93** on test (21.27 on dev). (1h)
 9. **Written:** dot product vs. multiplicative vs. additive attention pros/cons. (1i)
 
 ### 🔍 Part 2: Analyzing NMT Systems (25 pts)
@@ -56,9 +49,14 @@ a Unidirectional LSTM decoder, and multiplicative attention, in `nmt_model.py`:
 
 ## 🎯 Results
 
-- **Corpus BLEU:** *pending* — needs GPU training (target > 18).
-- **Verified on CPU:** sanity checks 1d/1e/1f all pass; a smoke test shows training loss decreasing
-  (full model: loss 7.97 → 7.06 → 6.81 over the first 30 iterations).
+- **Corpus BLEU (test):** **19.93** ✅ (target > 18)
+- **Corpus BLEU (dev):** **21.27**
+- **Trained on:** AutoDL, single NVIDIA RTX 4090 (CUDA); the full `zh_en_data` corpus was used and the
+  model early-stopped after five learning-rate trials, by which point it had converged.
+- **Artifacts:** `model.bin`, `outputs/test_outputs.txt`, `outputs/dev_outputs.txt`,
+  `outputs/beam_search_diagnostics/`.
+- **Verified on CPU (earlier):** sanity checks 1d/1e/1f all pass; a smoke test showed training loss
+  decreasing (full model: loss 7.97 → 7.06 → 6.81 over the first 30 iterations).
 
 ## 🛠️ Setup & How to Run
 
@@ -74,7 +72,7 @@ python sanity_check.py 1f
 # Train a tiny model locally to verify the pipeline (CPU)
 sh run.sh train_local
 
-# Train / evaluate on GPU (needs a GPU, ~2h; produces model.bin + beam diagnostics)
+# Train / evaluate on GPU (ran on an RTX 4090, ~2h; produces model.bin + beam diagnostics)
 sh run.sh train
 sh run.sh test
 ```

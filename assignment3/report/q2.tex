@@ -174,13 +174,29 @@
         \subpart[2] Did the translation quality improve over the training iterations for the model? Give three examples of translations of the example sentence at iterations 200, 3000, and the last iteration to illustrate your answer. For each iteration, pick the first beam search hypothesis as an example:
 
         \ifans{
-        In general, translation quality should improve over training: as the training loss decreases, the model learns better source--target alignments and more fluent output, so the first (highest-scoring) beam hypothesis at later iterations should be progressively more accurate and natural. I could not observe the actual hypotheses, since producing the \texttt{outputs/beam\_search\_diagnostics/} data requires training the model on a GPU, which I do not have; the above is therefore an inference rather than a report of observed translations.
+        Yes --- translation quality clearly improves as training proceeds. For the example source sentence \emph{``我还澄清了在该会议上提出的若干事项。''} (reference: \emph{``i was able to provide clarification on some of the matters which were raised at that meeting.''}), the first (highest-scoring) beam hypothesis at each iteration is:
+
+        \begin{itemize}
+            \item \textbf{Iteration 200} (score $\approx -33.8$): \emph{``it is the united nations of the united nations of the united nations of the united nations.''} --- the model has collapsed into a degenerate repetition loop and the output has nothing to do with the source.
+            \item \textbf{Iteration 3000} (score $\approx -15.3$): \emph{``i would also like to clarify the number of questions in the conference.''} --- now fluent, on-topic English (it picks up \emph{clarify} and \emph{in the conference}), but the content is still wrong (``number of questions'' for the matters raised) and it drifts from the reference.
+            \item \textbf{Last iteration (19000)} (score $\approx -6.7$): \emph{``i have also clarified a number of matters raised during the meeting.''} --- almost identical to the gold translation, with only minor wording/tense differences.
+        \end{itemize}
+
+        So the model progresses from incoherent repetition, to on-topic-but-content-wrong, to an essentially correct translation.
         }
 
         \subpart[2] How do various hypotheses resulting from beam search qualitatively compare? Give three other examples of hypotheses proposed by beam search at the last iteration to illustrate your answer.
 
         \ifans{
-        Beam search retains the top-$k$ hypotheses by model score, so the 10 hypotheses should be ranked, near-synonymous variants of one another: they should share the same overall meaning and structure but can differ in word choice, function words, and word order. The first (highest-scoring) hypothesis should be the most likely and fluent, while lower-ranked ones should be slightly less likely but still plausible. Again this is an inference; the observed hypotheses require a trained model, which I cannot run without a GPU.
+        The hypotheses are near-synonymous paraphrases of one another, ranked by model score. At the last iteration the top hypothesis is \emph{``i have also clarified a number of matters raised during the meeting.''} (score $\approx -6.7$), and the remaining candidates differ by only a single word --- swapping a content word, a preposition, or the location noun while staying grammatical and on-topic:
+
+        \begin{itemize}
+            \item \emph{``i have also clarified a number of \textbf{issues} raised during the meeting.''} (score $\approx -6.8$) --- \emph{matters} $\rightarrow$ \emph{issues};
+            \item \emph{``i have also clarified a number of matters raised \textbf{at} the meeting.''} (score $\approx -7.6$) --- \emph{during} $\rightarrow$ \emph{at};
+            \item \emph{``i have also clarified a number of matters raised during the \textbf{conference}.''} (score $\approx -8.0$) --- \emph{meeting} $\rightarrow$ \emph{conference} (and further down the list, \emph{session}).
+        \end{itemize}
+
+        All ten candidates therefore share the same syntactic frame and meaning but swap individual tokens; the highest-scoring one is the most natural and nearly equals the reference, while the lower-ranked variants stay fluent and plausible but are scored slightly lower.
         }
         
     \end{subparts}
